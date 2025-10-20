@@ -4,4 +4,5 @@ This is the README file for the emart-app project. This document provides an ove
 ## Table of Contents
 - [Project Overview](#project-overview)
 - generate an architectural design 
+- #generate 
 - 
