@@ -1,0 +1,55 @@
+generate code for a GitHub Actions CI/CD workflow file named cicd.yml that runs on every push to the main branch. The workflow should include the following steps:
+```yamlname: CI/CD Pipeline
+on:
+  push:
+    branches:
+      - main    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: Build project
+        run: npm run build
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to production..."
+          # Add your deployment commands here
+``````yaml
+name: CI/CD Pipeline
+on:
+  push:
+    branches:
+      - main    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - name: Install dependencies      
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: Build project
+        run: npm run build
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Deploying to production..."
+          # Add your deployment commands here
+``` 
