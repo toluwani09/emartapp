@@ -1,90 +1,71 @@
-generate code for a GitHub Actions CI/CD workflow file named cicd.yml that runs on every push to the main branch. The workflow should include the following steps:
-- Checkout the code
-- Set up Node.js environment
-- Install dependencies
-- Run tests
-- Build the project
-- Deploy to a production environment only if the push is to the main branch
-Additionally, include code to build artifacts and upload them to an S3 bucket after deployment.
+
 name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main    
+      - main
+
 jobs:
-  build:
+  node-build:
+    name: Node CI/CD
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 
+        uses: actions/checkout@v3
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
           cache: 'npm'
+
       - name: Install dependencies
-        
-        run: npm ci   
+        run: npm ci
+
       - name: Run tests
         run: npm test
+
       - name: Build project
-        run: npm run build
-      - name: Deploy to Production
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "Deploying to production..."
-          # Add your deployment commands here
-``````yaml
-name: CI/CD Pipeline
-on:
-  push:
-    branches:
-      - main    
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+        run: npm run build --if-present
+
+      - name: Archive build artifact
+        uses: actions/upload-artifact@v4
         with:
-          node-version: '16'
-      - name: Install dependencies      
-        run: npm install
-      - name: Run tests
-        run: npm test
-      - name: Build project
-        run: npm run build
+          name: node-build
+          path: build/
+
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         run: |
           echo "Deploying to production..."
-          # Add your deployment commands here
-          npm run deploy
-          generate code for artifact build and uplad to s3 bucket
+          npm run deploy --if-present
+
       - name: Upload build artifacts to S3
+        if: github.ref == 'refs/heads/main'
         uses: jakejarvis/s3-sync-action@v0.5.1
         with:
           args: --acl public-read --follow-symlinks
         env:
-          AWS_S3_BUCKET: ${{ secrets.emartapp-s3 }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AKIAQ7BU77XRYD4DATGU}}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AKIAQ7BU77XRYD4DATGU }}
-          AWS_REGION: 'us-east-1' # Change to your bucket's region
-          SOURCE_DIR: 'build/' # Change to your build output directory      
+          AWS_S3_BUCKET: ${{ secrets.EMARTAPP_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: 'us-east-1'
+          SOURCE_DIR: 'build/'
+
   maven-build:
     name: Maven build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
           cache: 'maven'
+
       - name: Cache Maven local repository
         uses: actions/cache@v3
         with:
@@ -92,8 +73,10 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
       - name: Build with Maven
         run: mvn -B clean package
+
       - name: Upload Maven artifact
         uses: actions/upload-artifact@v4
         with:
