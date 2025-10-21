@@ -1,5 +1,12 @@
 generate code for a GitHub Actions CI/CD workflow file named cicd.yml that runs on every push to the main branch. The workflow should include the following steps:
-```yamlname: CI/CD Pipeline
+- Checkout the code
+- Set up Node.js environment
+- Install dependencies
+- Run tests
+- Build the project
+- Deploy to a production environment only if the push is to the main branch
+Additionally, include code to build artifacts and upload them to an S3 bucket after deployment.
+name: CI/CD Pipeline
 on:
   push:
     branches:
@@ -66,4 +73,29 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AKIAQ7BU77XRYD4DATGU }}
           AWS_REGION: 'us-east-1' # Change to your bucket's region
           SOURCE_DIR: 'build/' # Change to your build output directory      
-
+  maven-build:
+    name: Maven build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+      - name: Cache Maven local repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build with Maven
+        run: mvn -B clean package
+      - name: Upload Maven artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-artifacts
+          path: target/*.jar
